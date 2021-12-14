@@ -26,12 +26,57 @@ namespace PaymentApi
 {
     public class Startup
     {
+         public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {   
+            services.Configure<JwtConfig>(Configuration.GetSection("JwtConfig"));
+
+            //membuat database
+            // services.AddDbContext<ApiDbContext>(options =>
+            //     options.UseMySQL(Configuration.GetConnectionString("DefaultConnection"))// downoad MySql.EntityFrameworkCore
+            // );
+            string mySqlConnectionStr = Configuration.GetConnectionString("DefaultConnection");
+            services.AddDbContextPool<ApiDbContext>(options => options.UseMySQL(mySqlConnectionStr));
+            services.AddControllers();
+            services.AddSwaggerGen(c =>
+            {
+               c.SwaggerDoc("v1", new OpenApiInfo { 
+                    Title = "PaymentApp", 
+                    Version = "v1",
+                    Description = "Authentication and Authorization in ASP.NET 5 with JWT and Swagger"
+                });
+
+                // (JWT)
+                c.AddSecurityDefinition("Bearer",new OpenApiSecurityScheme()
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "Enter 'Bearer' [space] and then your valid token in the text input below.\r\n\r\nExample: \"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\""
+                });
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement {
+                    {
+                        new OpenApiSecurityScheme {
+                            Reference = new OpenApiReference {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] { }
+                    }
+                });
+            });
+
             var key = Encoding.ASCII.GetBytes(Configuration["JwtConfig:Secret"]);
+            // var key = Configuration["JwtConfig:Secret"];
 
                 var TokenValidationParameters = new TokenValidationParameters {
                     ValidateIssuerSigningKey = true,
