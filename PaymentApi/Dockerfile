@@ -11,7 +11,7 @@ EXPOSE 5001
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
-COPY..
+COPY . .
 # COPY ["PaymentApi/PaymentApi.csproj", "PaymentApi/"]
 # RUN dotnet restore "PaymentApi/PaymentApi.csproj"
 # COPY . .
